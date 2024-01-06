@@ -1,10 +1,7 @@
-﻿
-using Microsoft.Extensions.Logging;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Tesseract;
 
 namespace FoodPollsBot.Services;
 
@@ -29,7 +26,12 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration config
 
             _ => HandleUnknownMessageUpdateAsync(botClient, update, cancellationToken)
         };
-
+        
+        if(update.Message.Text == "/opros")
+        {
+             HandlePolls(update.Message.Chat.Id, botClient).Wait();
+            await RemoverFiles();
+        }
        
 
 
@@ -48,9 +50,8 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration config
     private async Task HandleMessageUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
 
-
         var photos = update.Message.Photo;
-
+      
         if (photos.Length > 0)
         {
              
@@ -60,42 +61,49 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration config
 
             _logger.LogInformation(photoFile.FilePath);
 
-            
-
             var fileName = Path.GetFileName(photoFile.FilePath);  
 
-           
-
             await using Stream fileStream = System.IO.File.Create(downloadpath + fileName);
+      
+            await botClient.DownloadFileAsync(photoFile.FilePath, fileStream, cancellationToken);
 
-            var downloadTask = botClient.DownloadFileAsync(photoFile.FilePath, fileStream);
-
-            await downloadTask.ContinueWith((t) =>
-            {
-               var filesNow =  Directory.GetFiles(downloadpath);
-
-                
-                using (var engine = new TesseractEngine("../tessdata", "rus", EngineMode.Default))
-                {
-                    using (var img = Pix.LoadFromFile(filesNow[0]))
-                    {
-                        using (var page = engine.Process(img))
-                        {
-                            var text = page.GetText();
-                            _logger.LogInformation(text);   
-                        }
-                    }
-                }
-
-
-            });
-
-            await downloadTask;
         }
+
 
     }
 
   
+    private async Task HandlePolls(long chatId, ITelegramBotClient botClient)
+    {
+        var files = Directory.GetFiles(downloadpath);
+
+        Extentions.Extentions.SetWidthHeightImage().Wait();
+
+        var texts = await Extentions.Extentions.GetTextFromImage();
+
+        await botClient.SendPollAsync(-1002097106323, "Obed", texts, isAnonymous: false,  allowsMultipleAnswers: true);
+
+    }
+
+
+    
+
+
+    private async Task RemoverFiles()
+    {
+        var croppedFiles = Directory.GetFiles("../CroppedPhotos/").ToList();
+        var photoFiles = Directory.GetFiles(downloadpath).ToList();
+
+        croppedFiles.ForEach(photo =>
+        {
+            System.IO.File.Delete(photo);
+        });
+        photoFiles.ForEach(photo =>
+        {
+            System.IO.File.Delete(photo);
+        });
+
+    }
 
     private Task HandleUnknownMessageUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {

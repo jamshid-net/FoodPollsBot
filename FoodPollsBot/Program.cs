@@ -19,6 +19,7 @@ builder.Services.AddSingleton<ITelegramBotClient>(
 
 builder.Services.AddHostedService<BotBackgroundService>();
 
+
 var app = builder.Build();
 
 
