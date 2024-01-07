@@ -32,6 +32,7 @@ builder.Services.AddSingleton<ITelegramBotClient>(
 
 builder.Services.AddKeyedSingleton<ITelegramCommand, OprosCommand>("opros");
 builder.Services.AddKeyedSingleton<ITelegramCommand, MoneyPollsCommand>("getmoney");
+builder.Services.AddKeyedSingleton<ITelegramCommand, GetPollResultCommand>("getPollResult");
 
 
 

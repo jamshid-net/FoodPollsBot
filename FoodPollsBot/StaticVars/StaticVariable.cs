@@ -1,4 +1,6 @@
-﻿namespace FoodPollsBot.StaticVars;
+﻿using Telegram.Bot.Types;
+
+namespace FoodPollsBot.StaticVars;
 
 public static class StaticVariable
 {
@@ -11,4 +13,7 @@ public static class StaticVariable
         33780774,
         128564403
     ];
+
+    public static int[]? optionsIds { get; set; } 
+
 }

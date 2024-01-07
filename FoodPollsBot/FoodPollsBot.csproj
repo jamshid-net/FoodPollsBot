@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Aspose.Imaging" Version="23.12.0" />
+    <PackageReference Include="ConsoleTables" Version="2.6.1" />
     <PackageReference Include="Polly" Version="8.2.1" />
     <PackageReference Include="Polly.Core" Version="8.2.1" />
     <PackageReference Include="Polly.Extensions" Version="8.2.1" />

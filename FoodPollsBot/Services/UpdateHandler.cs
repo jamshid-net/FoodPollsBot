@@ -21,12 +21,15 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger,
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
        
-        if (!AllowedUserIds.Any(id => id == update.Message.From.Id))
-            return;
-
         if (update.Message is null) return;
+        
+        if (!AllowedUserIds.Any(id => id == update.Message.From.Id)) return;
+
+
         var handleTask = update.Type switch
         {
+            
+           // UpdateType.PollAnswer => Handlepoll
 
             UpdateType.Message => HandleMessageUpdateAsync(botClient, update, cancellationToken),
 
@@ -55,7 +58,7 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger,
         }
 
         var photos = update.Message.Photo;
-      
+
         if (photos.Length > 0)
         {
              

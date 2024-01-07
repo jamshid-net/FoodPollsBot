@@ -3,6 +3,7 @@ using FoodPollsBot.Interfaces;
 using Polly.Registry;
 using Telegram.Bot;
 using Telegram.Bot.Types;
+using static FoodPollsBot.StaticVars.StaticVariable;
 
 namespace FoodPollsBot.Commands;
 
@@ -29,7 +30,7 @@ public class OprosCommand(ITelegramBotClient botClient,
              });
 
 
-        await task.ContinueWith(t=> imageService.RemoverFiles());
+        await task.ContinueWith(t=> imageService.RemoverFiles().ConfigureAwait(true));
         
 
     }
@@ -41,7 +42,8 @@ public class OprosCommand(ITelegramBotClient botClient,
 
         var texts = await imageService.GetTextFromImage();
 
-        await botClient.SendPollAsync(groupChatId, "Obed", texts, isAnonymous: false, allowsMultipleAnswers: true, cancellationToken: token);
+        var message = await botClient.SendPollAsync(groupChatId, "Obed", texts, isAnonymous: false, allowsMultipleAnswers: true, cancellationToken: token);
 
+        var f = message;
     }
 }

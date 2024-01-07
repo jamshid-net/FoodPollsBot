@@ -3,8 +3,11 @@
 namespace FoodPollsBot.Services;
 
 public class GetCommandsService
-    ([FromKeyedServices("opros")] ITelegramCommand oprosCommand,
-     [FromKeyedServices("getmoney")] ITelegramCommand getmoneyCommand)
+    (
+    [FromKeyedServices("opros")] ITelegramCommand oprosCommand,
+     [FromKeyedServices("getmoney")] ITelegramCommand getmoneyCommand,
+     [FromKeyedServices("getPollResult")] ITelegramCommand getPollResult
+    )
 {
     List<ITelegramCommand> commands;
     public List<ITelegramCommand> GetCommands()
@@ -12,7 +15,8 @@ public class GetCommandsService
         commands = new List<ITelegramCommand>()
         {
             oprosCommand,
-            getmoneyCommand
+            getmoneyCommand,
+            getPollResult
         };
 
         return commands;
