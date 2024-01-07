@@ -1,15 +1,17 @@
-﻿using Telegram.Bot;
+﻿using FoodPollsBot.Interfaces;
+using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-
+using static FoodPollsBot.StaticVars.StaticVariable;
 namespace FoodPollsBot.Services;
 
-public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration configuration) : IUpdateHandler
+public class UpdateHandler(ILogger<UpdateHandler> _logger, 
+                            IConfiguration configuration,
+                            IImageOperationService imageService,
+                            GetCommandsService commands) : IUpdateHandler
 {
-
-    private string downloadpath => configuration["downloadPath"] ?? "../";
-
+    private long _groupChatId => configuration.GetValue<long>("GroupChatId");
     public Task HandlePollingErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
         _logger.LogError(exception.Message, "Error while polling telegram bot");
@@ -18,6 +20,10 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration config
 
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
+       
+        if (!AllowedUserIds.Any(id => id == update.Message.From.Id))
+            return;
+
         if (update.Message is null) return;
         var handleTask = update.Type switch
         {
@@ -27,14 +33,6 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration config
             _ => HandleUnknownMessageUpdateAsync(botClient, update, cancellationToken)
         };
         
-        if(update.Message.Text == "/opros")
-        {
-             HandlePolls(update.Message.Chat.Id, botClient).Wait();
-            await RemoverFiles();
-        }
-       
-
-
         try
         {
             await handleTask;
@@ -50,6 +48,12 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration config
     private async Task HandleMessageUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
 
+        
+        if(!string.IsNullOrEmpty(update.Message.Text) &&  update.Message.Text.StartsWith("/"))
+        {
+            await HandleCommands(update, cancellationToken);
+        }
+
         var photos = update.Message.Photo;
       
         if (photos.Length > 0)
@@ -63,7 +67,7 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration config
 
             var fileName = Path.GetFileName(photoFile.FilePath);  
 
-            await using Stream fileStream = System.IO.File.Create(downloadpath + fileName);
+            await using Stream fileStream = System.IO.File.Create(Downloadpath + fileName);
       
             await botClient.DownloadFileAsync(photoFile.FilePath, fileStream, cancellationToken);
 
@@ -72,37 +76,16 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger, IConfiguration config
 
     }
 
-  
-    private async Task HandlePolls(long chatId, ITelegramBotClient botClient)
+    private async Task HandleCommands(Update update, CancellationToken cancellationToken)
     {
-        var files = Directory.GetFiles(downloadpath);
-
-        Extentions.Extentions.SetWidthHeightImage().Wait();
-
-        var texts = await Extentions.Extentions.GetTextFromImage();
-
-        await botClient.SendPollAsync(-1002097106323, "Obed", texts, isAnonymous: false,  allowsMultipleAnswers: true);
-
-    }
-
-
-    
-
-
-    private async Task RemoverFiles()
-    {
-        var croppedFiles = Directory.GetFiles("../CroppedPhotos/").ToList();
-        var photoFiles = Directory.GetFiles(downloadpath).ToList();
-
-        croppedFiles.ForEach(photo =>
+        foreach (var command in commands.GetCommands())
         {
-            System.IO.File.Delete(photo);
-        });
-        photoFiles.ForEach(photo =>
-        {
-            System.IO.File.Delete(photo);
-        });
+            if(command.Name == update.Message.Text)
+            {
+              await command.ExecuteAsync(_groupChatId, update, cancellationToken);
+            }
 
+        }
     }
 
     private Task HandleUnknownMessageUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
