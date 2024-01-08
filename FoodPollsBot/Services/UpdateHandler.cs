@@ -21,15 +21,10 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger,
     public async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
        
-        if (update.Message is null) return;
-        
-        if (!AllowedUserIds.Any(id => id == update.Message.From.Id)) return;
-
-
         var handleTask = update.Type switch
         {
-            
-           // UpdateType.PollAnswer => Handlepoll
+
+            UpdateType.PollAnswer => HandlepollAnswerAsync(botClient, update, cancellationToken),
 
             UpdateType.Message => HandleMessageUpdateAsync(botClient, update, cancellationToken),
 
@@ -50,7 +45,8 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger,
 
     private async Task HandleMessageUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
-
+        if (!AllowedUserIds.Any(id => id == update.Message.From.Id)) return;
+        if (update.Message is null) return; 
         
         if(!string.IsNullOrEmpty(update.Message.Text) &&  update.Message.Text.StartsWith("/"))
         {
@@ -78,7 +74,18 @@ public class UpdateHandler(ILogger<UpdateHandler> _logger,
 
 
     }
+    private async  Task HandlepollAnswerAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    {
+        if (!AllowedUserIds.Any(id => id == update.Message.From.Id)) return;
 
+        if (update.Poll is null) return;
+
+       
+        TelegramPoll = update.Poll;
+        
+    }
+
+  
     private async Task HandleCommands(Update update, CancellationToken cancellationToken)
     {
         foreach (var command in commands.GetCommands())

@@ -13,17 +13,9 @@ public class GetPollResultCommand(ITelegramBotClient botClient) : ITelegramComma
 
     public async Task ExecuteAsync(long gropChatId, Update update, CancellationToken token = default)
     {
-        //if (LastPollId is null)
-        //    return;
-
-
-       
-
-          
-
         var table = new ConsoleTable("Food", "Count");
 
-        foreach (var poll in update.Poll.Options)
+        foreach (var poll in TelegramPoll.Options)
         {
             table.AddRow(poll.Text, poll.VoterCount);
         }

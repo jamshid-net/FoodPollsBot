@@ -8,12 +8,12 @@ public static class StaticVariable
 
     public  static string CroppedPhotos {  get; set; }
 
-    public static List<long> AllowedUserIds =
-    [
+    public static List<long> AllowedUserIds = new List<long>
+    {
         33780774,
         128564403
-    ];
+    };
 
-    public static int[]? optionsIds { get; set; } 
+    public static Poll TelegramPoll { get; set; }   
 
 }

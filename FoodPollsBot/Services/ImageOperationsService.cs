@@ -24,7 +24,7 @@ public class ImageOperationsService(IConfiguration configuration) : IImageOperat
                         var text = page.GetText();
                         if (string.IsNullOrWhiteSpace(text))
                         {
-                            text = "НАПАЛЕОН";
+                            text = "РАКУШКА";
                         }
                         string cleanedText = Regex.Replace(text, @"[\s_]+", " ");
 
